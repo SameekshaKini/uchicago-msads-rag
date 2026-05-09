@@ -61,16 +61,16 @@ The key principle is that the language model only answers from the retrieved con
 uchicago-msads-rag/
 |
 |-- src/
-|   |-- scraper.py          Web crawler for the MS-ADS website
-|   |-- embedder.py         Embedding model + ChromaDB vector store
-|   |-- llm_factory.py      LLM factory (Azure OpenAI or HuggingFace)
-|   |-- rag_chain.py        Conversational RAG pipeline
-|   |-- evaluator.py        Evaluation (heuristic, BLEU, ROUGE, RAGAS)
+|   |-- scraper.py              Web crawler for the MS-ADS website
+|   |-- embedder.py             Embedding model + ChromaDB vector store
+|   |-- llm_factory.py          LLM factory (Azure OpenAI or HuggingFace)
+|   |-- rag_chain.py            Conversational RAG pipeline
+|   |-- evaluator.py            Evaluation (heuristic, BLEU, ROUGE, RAGAS)
 |
 |-- ui/
-|   |-- app.py              Streamlit chatbot interface
+|   |-- app.py                  Streamlit chatbot interface
 |
-|-- RAG_Pipeline_Final_v5.ipynb    Full end-to-end Colab notebook
+|-- msads_rag_pipeline.ipynb    Full end-to-end Colab notebook
 |-- requirements.txt
 |-- .env.example
 |-- README.md
@@ -94,15 +94,15 @@ uchicago-msads-rag/
 
 ## Key Features
 
-**Conversational memory.** The system remembers the last 10 turns of conversation. If you ask "What are the admission requirements?" and then follow up with "Do I need work experience?", the second question is automatically rewritten as "Does the MS-ADS program require work experience?" before being searched. This means follow-up questions work naturally without you having to repeat context.
+- **Conversational memory.** The system remembers the last 10 turns of conversation. If you ask "What are the admission requirements?" and then follow up with "Do I need work experience?", the second question is automatically rewritten as "Does the MS-ADS program require work experience?" before being searched. This means follow-up questions work naturally without you having to repeat context.
 
-**Source citation.** Every answer includes the URL of the page(s) the information came from. The Streamlit UI also lets you expand a panel to read the raw retrieved text chunks, so you can see exactly what the model was given.
+- **Source citation.** Every answer includes the URL of the page(s) the information came from. The Streamlit UI also lets you expand a panel to read the raw retrieved text chunks, so you can see exactly what the model was given.
 
-**Responsible AI guardrails.** The system detects off-topic questions and redirects them. It strips PII (email addresses, phone numbers, SSNs) from generated responses. The system prompt explicitly prohibits the model from inventing course names, deadlines, or statistics.
+- **Responsible AI guardrails.** The system detects off-topic questions and redirects them. It strips PII (email addresses, phone numbers, SSNs) from generated responses. The system prompt explicitly prohibits the model from inventing course names, deadlines, or statistics.
 
-**Curated course index.** The core and elective course names are added as hand-crafted summary chunks in addition to the scraped chunks. This ensures that short queries like "what are the core courses?" retrieve the right content even when the scraped chunks spread course descriptions across many individual paragraphs.
+- **Curated course index.** The core and elective course names are added as hand-crafted summary chunks in addition to the scraped chunks. This ensures that short queries like "what are the core courses?" retrieve the right content even when the scraped chunks spread course descriptions across many individual paragraphs.
 
-**Switchable LLM backend.** Setting `LLM_PROVIDER = 'huggingface'` in the credentials cell switches the entire pipeline to use Mistral-7B-Instruct for free, with no code changes required.
+- **Switchable LLM backend.** Setting `LLM_PROVIDER = 'huggingface'` in the credentials cell switches the entire pipeline to use Mistral-7B-Instruct for free, with no code changes required.
 
 ---
 
@@ -110,23 +110,23 @@ uchicago-msads-rag/
 
 The system is evaluated using four complementary methods, each measuring something different.
 
-**Heuristic evaluation** runs instantly with no API calls. It scores answers on whether a real answer was given (not a fallback), whether enough context was retrieved, keyword overlap between question and answer, absence of hedging language, and whether source URLs were cited.
+- **Heuristic evaluation** runs instantly with no API calls. It scores answers on whether a real answer was given (not a fallback), whether enough context was retrieved, keyword overlap between question and answer, absence of hedging language, and whether source URLs were cited.
 
-**BLEU and ROUGE** measure n-gram overlap between generated answers and reference answers. BLEU measures precision (how much of the generated text matches the reference), while ROUGE measures recall (how much of the reference is covered). These scores tend to be lower than you might expect because GPT-4.1-mini paraphrases rather than copying the reference wording, which is actually the correct behavior.
+- **BLEU and ROUGE** measure n-gram overlap between generated answers and reference answers. BLEU measures precision (how much of the generated text matches the reference), while ROUGE measures recall (how much of the reference is covered). These scores tend to be lower than you might expect because GPT-4.1-mini paraphrases rather than copying the reference wording, which is actually the correct behavior.
 
-**LLM-as-Judge** asks the same language model to score each answer on five dimensions: correctness, completeness, relevance, clarity, and grounding. Each dimension is scored 0-10 for a total of 0-50. This method captures semantic quality that BLEU/ROUGE cannot measure since it understands paraphrasing.
+- **LLM-as-Judge** asks the same language model to score each answer on five dimensions: correctness, completeness, relevance, clarity, and grounding. Each dimension is scored 0-10 for a total of 0-50. This method captures semantic quality that BLEU/ROUGE cannot measure since it understands paraphrasing.
 
-**RAGAS** provides RAG-specific metrics: faithfulness (is the answer supported by the retrieved context?), answer relevancy, context precision (are the retrieved chunks relevant?), and context recall (does the retrieved context cover the ground truth?). This is the most targeted evaluation for a RAG system because it evaluates both the retrieval and the generation together.
+- **RAGAS** provides RAG-specific metrics: faithfulness (is the answer supported by the retrieved context?), answer relevancy, context precision (are the retrieved chunks relevant?), and context recall (does the retrieved context cover the ground truth?). This is the most targeted evaluation for a RAG system because it evaluates both the retrieval and the generation together.
 
 ---
 
 ## Running the Project
 
-The entire pipeline runs in a single Google Colab notebook. Open `RAG_Pipeline_Final_v5.ipynb` in Colab and run the cells in order.
+The entire pipeline runs in a single Google Colab notebook. Open `msads_rag_pipeline.ipynb` in Colab and run the cells in order.
 
 ### Credentials
 
-You will need to add three secrets in Colab's Secrets panel (the key icon in the left sidebar). Toggle "Notebook access" on for each one.
+You will need to add 3 secrets in Colab's Secrets panel.
 
 | Secret name | Value |
 |---|---|
@@ -138,9 +138,9 @@ To use HuggingFace instead (no API cost), change `LLM_PROVIDER = 'huggingface'` 
 
 ### First-time setup
 
-Run Cell 1 (installs packages), then restart the runtime (Runtime > Restart session), then run from Cell 2 onwards. The runtime restart is required because pinning numpy to avoid a binary incompatibility with ChromaDB requires a clean Python process.
+- Run Cell 1 (installs packages), then restart the runtime (Runtime > Restart session), then run from Cell 2 onwards. The runtime restart is required because pinning numpy to avoid a binary incompatibility with ChromaDB requires a clean Python process.
 
-After the first run, the scraped data and vector store are saved to `data/`. If you reconnect to Colab later, skip Cell 9 (scrape) and Cell 11 (embed) if the data files still exist.
+- After the first run, the scraped data and vector store are saved to `data/`. If you reconnect to Colab later, skip Cell 9 (scrape) and Cell 11 (embed) if the data files still exist.
 
 ### Installation
 
@@ -152,11 +152,11 @@ pip install -r requirements.txt
 
 ## Design Decisions
 
-**Why 150-word chunks with 30-word overlap?** Larger chunks (the original scraper used 500 words) dilute the embedding because one 500-word chunk might contain course descriptions, Coursera recommendations, and admissions information all mixed together. The embedding of that chunk is an average of all those topics, so it matches poorly against specific queries. At 150 words, each chunk covers roughly one topic, giving the embedding model a focused signal to work with.
+- **Why 150-word chunks with 30-word overlap?** Larger chunks (the original scraper used 500 words) dilute the embedding because one 500-word chunk might contain course descriptions, Coursera recommendations, and admissions information all mixed together. The embedding of that chunk is an average of all those topics, so it matches poorly against specific queries. At 150 words, each chunk covers roughly one topic, giving the embedding model a focused signal to work with.
 
-**Why curated course chunks?** The course-progressions page presents course names as headings followed by multi-paragraph descriptions. When chunked at 150 words, each chunk contains the description of one course but not the full list. A query like "what are the core courses?" needs to match against a chunk that contains all six course names together. Rather than engineering around this with query expansion or larger chunks, the cleanest solution is to add three hand-crafted summary chunks that list all courses in a clean format.
+- **Why curated course chunks?** The course-progressions page presents course names as headings followed by multi-paragraph descriptions. When chunked at 150 words, each chunk contains the description of one course but not the full list. A query like "what are the core courses?" needs to match against a chunk that contains all six course names together. Rather than engineering around this with query expansion or larger chunks, the cleanest solution is to add three hand-crafted summary chunks that list all courses in a clean format.
 
-**Why LangChain 0.2 and not a newer version?** Newer versions of LangChain (0.3+) changed the import paths for several core classes and introduced API changes that conflict with the chromadb and openai versions that are stable in the Google Colab environment as of early 2025. Pinning to 0.2.16 ensures the notebook runs without version conflicts.
+- **Why LangChain 0.2 and not a newer version?** Newer versions of LangChain (0.3+) changed the import paths for several core classes and introduced API changes that conflict with the chromadb and openai versions that are stable in the Google Colab environment as of early 2025. Pinning to 0.2.16 ensures the notebook runs without version conflicts.
 
 ---
 
